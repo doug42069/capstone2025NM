@@ -1,0 +1,36 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Spotify Playlist Generator</title>
+</head>
+<body>
+  <header>
+    <h1>Spotify Playlist Generator</h1>
+    <button class="login-btn">Login</button>
+  </header>
+
+  <main>
+    <form id="playlistForm">
+      <label for="mood">Select Mood/Activity</label>
+      <select id="mood" name="mood" required>
+        <option value="">--Choose one--</option>
+        <option value="chill">Chill</option>
+        <option value="workout">Workout</option>
+        <option value="party">Party</option>
+        <option value="focus">Focus</option>
+      </select>
+
+      <label for="playlistName">Playlist Name</label>
+      <input type="text" id="playlistName" name="playlistName" placeholder="Enter playlist name" required>
+
+      <label for="songCount">Number of Songs</label>
+      <input type="range" id="songCount" name="songCount" min="1" max="50">
+      <div class="slider-value"><span id="songCountValue">50</span> songs</div>
+
+      <button type="submit" class="submit-btn">Generate Playlist</button>
+    </form>
+   </main>
+</body>
+</html>
