@@ -16,6 +16,6 @@ function requestAuth() {
     url += "&response_type=code";
     url += "&redirect_uri=" + encodeURI(redirect_uri);
     url += "&showdialog=true";
-    url += "&scope=user-read-private user-read-email user-library-modify user-library-read playlist-read-private playlist-read-collaborative playlist-modify-private playlist-modify-public ugc-image-upload user-read-plaback-state user-modify-playback-state user-read-currently-playing";
+    url += "&scope=user-read-private user-read-email user-library-modify user-library-read playlist-read-private playlist-read-collaborative playlist-modify-private playlist-modify-public ugc-image-upload user-read-playback-state user-modify-playback-state user-read-currently-playing";
     window.location.href = url;
 }
