@@ -1,6 +1,6 @@
 const redirect_uri = "https://doug42069.github.io/capstone2025NM/";
 const client_id = "bd53535497384e2192f495522d3f3274";
-const AUTHORIZE = "https://accounts.spotify.com/authorize";
+let accessToken = null;
 
 ///////LOGIN FUNCTION////////
 function requestAuthorization() {
@@ -10,26 +10,26 @@ function requestAuthorization() {
     "user-read-email",
     "user-read-private"
   ].join(" ");
-  let url = `${AUTHORIZE}?client_id=${client_id}`
-          + `&response_type=token`
-          + `&redirect_uri=${encodeURIComponent(redirect_uri)}`
-          + `&scope=${encodeURIComponent(scopes)}`
-          + `&show_dialog=true`;
+
+  const url = `https://accounts.spotify.com/authorize?` +
+              `client_id=${client_id}` +
+              `&response_type=token` +
+              `&redirect_uri=${encodeURIComponent(redirect_uri)}` +
+              `&scope=${encodeURIComponent(scopes)}` +
+              `&show_dialog=true`;
+
   window.location = url;
 }
 //////////////////////////////////////////////////
 
 //////////////////TOKEN AQUISITION//////////////////
-let accessToken = null;
 window.addEventListener("load", () => {
-  const hash = window.location.hash
-    .substring(1)
-    .split("&")
-    .reduce((acc, part) => {
-      const [key, val] = part.split("=");
-      acc[key] = val;
-      return acc;
-    }, {});
+  const hash = window.location.hash.substring(1).split("&").reduce((acc, part) => {
+    const [key, val] = part.split("=");
+    acc[key] = val;
+    return acc;
+  }, {});
+
   if (hash.access_token) {
     accessToken = hash.access_token;
     console.log("Access token acquired.");
@@ -51,14 +51,15 @@ const moodMap = {
 //////////////PLAYLIST GENERATION/////////////////////////////////
 document.getElementById("playlistForm").addEventListener("submit", async e => {
   e.preventDefault();
+
   if (!accessToken) {
     alert("Please login first!");
     return;
   }
 
-  const mood         = document.getElementById("mood").value;
+  const mood = document.getElementById("mood").value;
   const playlistName = document.getElementById("playlistName").value;
-  const songCount    = document.getElementById("songCount").value;
+  const songCount = document.getElementById("songCount").value;
 
   try {
     const user = await fetch("https://api.spotify.com/v1/me", {

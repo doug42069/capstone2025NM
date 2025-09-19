@@ -8,7 +8,7 @@
 <body>
   <header>
     <h1>Spotify Playlist Generator</h1>
-    <input class="login-btn" type="button" onclick="requestAuthorization()" value="Login">
+    <input type="button" onclick="requestAuthorization()" value="Login">
   </header>
 
   <main>
@@ -29,12 +29,11 @@
       <input type="range" id="songCount" name="songCount" min="1" max="50" value="20">
       <div class="slider-value"><span id="songCountValue">20</span> songs</div>
 
-      <button type="submit" class="submit-btn">Generate Playlist</button>
+      <button type="submit">Generate Playlist</button>
     </form>
 
     <div id="playlistLink"></div>
   </main>
-
 
   <script src="app.js"></script>
 </body>
