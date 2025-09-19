@@ -1,57 +1,104 @@
-const redirect_uri = "https://doug42069.github.io/capstone2025NM/";
+///////////////////////////////LOGIN/////////////////////////////////////////////
 const client_id = "bd53535497384e2192f495522d3f3274";
+const redirect_uri = "https://doug42069.github.io/capstone2025NM/";
+const scopes = [
+  "playlist-modify-private",
+  "playlist-modify-public",
+  "user-read-private",
+  "user-read-email"
+].join(" ");
+
 let accessToken = null;
 
-///////LOGIN FUNCTION////////
-function requestAuthorization() {
-  const scopes = [
-    "playlist-modify-private",
-    "playlist-modify-public",
-    "user-read-email",
-    "user-read-private"
-  ].join(" ");
+function generateRandomString(length) {
+  const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+  let str = '';
+  for (let i = 0; i < length; i++) {
+    str += chars.charAt(Math.floor(Math.random() * chars.length));
+  }
+  return str;
+}
+
+function base64URLEncode(str) {
+  return btoa(String.fromCharCode.apply(null, new Uint8Array(str)))
+      .replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
+}
+
+async function sha256(buffer) {
+  return await crypto.subtle.digest('SHA-256', buffer);
+}
+
+async function loginWithPKCE() {
+  const codeVerifier = generateRandomString(128);
+  localStorage.setItem('code_verifier', codeVerifier);
+
+  const encoder = new TextEncoder();
+  const codeChallenge = base64URLEncode(await sha256(encoder.encode(codeVerifier)));
 
   const url = `https://accounts.spotify.com/authorize?` +
               `client_id=${client_id}` +
-              `&response_type=token` +
+              `&response_type=code` +
               `&redirect_uri=${encodeURIComponent(redirect_uri)}` +
               `&scope=${encodeURIComponent(scopes)}` +
-              `&show_dialog=true`;
+              `&code_challenge_method=S256` +
+              `&code_challenge=${codeChallenge}`;
 
   window.location = url;
 }
-//////////////////////////////////////////////////
 
-//////////////////TOKEN AQUISITION//////////////////
-window.addEventListener("load", () => {
-  const hash = window.location.hash.substring(1).split("&").reduce((acc, part) => {
-    const [key, val] = part.split("=");
-    acc[key] = val;
-    return acc;
-  }, {});
+async function handleRedirect() {
+  const params = new URLSearchParams(window.location.search);
+  const code = params.get('code');
+  if (!code) return;
 
-  if (hash.access_token) {
-    accessToken = hash.access_token;
-    console.log("Access token acquired.");
-    window.history.replaceState({}, document.title, redirect_uri);
-  }
-});
-///////////////////////////////////////////////////////////
+  const codeVerifier = localStorage.getItem('code_verifier');
+  const body = new URLSearchParams({
+    client_id,
+    grant_type: 'authorization_code',
+    code,
+    redirect_uri,
+    code_verifier: codeVerifier
+  });
 
-/////////////////MOOD/ACTIVITY MAP/////////////////////////
+  const res = await fetch('https://accounts.spotify.com/api/token', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+    body
+  });
+
+  const data = await res.json();
+  accessToken = data.access_token;
+  console.log('Access token acquired via PKCE.');
+
+  window.history.replaceState({}, document.title, redirect_uri);
+}
+
+handleRedirect();
+///////////////////////////////////////////////////////////////////////////////////////////////////
+
+///////////////////////MOOD/ACTIVITY MAP///////////////////////////////////
 const moodMap = {
   chill:   { keywords: "chill acoustic ambient" },
   workout: { keywords: "energetic workout upbeat" },
   party:   { keywords: "party dance pop" },
   focus:   { keywords: "focus instrumental study" }
 };
-//////////////////////////////////////////////////
+///////////////////////////////////////////////////
+
+/////////////////SLIDER/////////////////////
+document.getElementById("songCount").addEventListener("input", e => {
+  document.getElementById("songCountValue").textContent = e.target.value;
+});
+///////////////////////////////////////////
+
+/////////////LOGIN BUTTON//////////////////////
+document.getElementById("loginBtn").addEventListener("click", loginWithPKCE);
+////////////////////////////////////////////////
 
 
-//////////////PLAYLIST GENERATION/////////////////////////////////
+/////////////////PLAYLIST GENERATOR//////////////////////////
 document.getElementById("playlistForm").addEventListener("submit", async e => {
   e.preventDefault();
-
   if (!accessToken) {
     alert("Please login first!");
     return;
@@ -71,6 +118,7 @@ document.getElementById("playlistForm").addEventListener("submit", async e => {
     const searchRes = await fetch(searchUrl, {
       headers: { Authorization: `Bearer ${accessToken}` }
     }).then(r => r.json());
+
     const trackUris = searchRes.tracks.items.map(t => t.uri);
 
     const newPlaylist = await fetch(`https://api.spotify.com/v1/users/${user.id}/playlists`, {
@@ -103,13 +151,7 @@ document.getElementById("playlistForm").addEventListener("submit", async e => {
 
   } catch (err) {
     console.error(err);
-    alert("Error creating playlist. Check console for details.");
+    alert("Error creating playlist. Check console.");
   }
 });
-/////////////////////////////////////////////////////////////////////
-
-//////////////////////SLIDER////////////////////
-document.getElementById("songCount").addEventListener("input", e => {
-  document.getElementById("songCountValue").textContent = e.target.value;
-});
-////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////////
